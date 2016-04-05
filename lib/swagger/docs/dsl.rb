@@ -52,7 +52,7 @@ module Swagger
 
       # helper method to generate enums
       def param_list(param_type, name, type, required, description = nil, allowed_values = [], hash = {})
-        hash.merge!({allowable_values: {value_type: "LIST", values: allowed_values}})
+        hash.merge!({ :allowable_values => { :value_type => "LIST", :values => allowed_values}})
         param(param_type, name, type, required, description, hash)
       end
 
@@ -103,15 +103,15 @@ module Swagger
 
       def property(name, type, required, description = nil, hash={})
         properties[name] = {
-          type: type,
-          description: description,
+          :type => type,
+          :description => description,
         }.merge!(hash)
         self.required << name if required == :required
       end
 
       # helper method to generate enums
       def property_list(name, type, required, description = nil, allowed_values = [], hash = {})
-        hash.merge!({allowable_values: {value_type: "LIST", values: allowed_values}})
+        hash.merge!({ :allowable_values => { :value_type => "LIST", :values => allowed_values}})
         property(name, type, required, description, hash)
       end
     end

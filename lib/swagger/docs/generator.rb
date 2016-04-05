@@ -78,8 +78,8 @@ module Swagger
               resources << generate_resource(ret[:path], ret[:apis], ret[:models], settings, root, config, ret[:klass].swagger_config)
               debased_path = get_debased_path(ret[:path], settings[:controller_base_path])
               resource_api = {
-                path: "/#{Config.transform_path(trim_leading_slash(debased_path), api_version)}.{format}",
-                description: ret[:klass].swagger_config[:description]
+                :path => "/#{Config.transform_path(trim_leading_slash(debased_path), api_version)}.{format}",
+                :description => ret[:klass].swagger_config[:description]
               }
               root[:apis] << resource_api
             end
@@ -132,11 +132,11 @@ module Swagger
         end
 
         def process_path(path, root, config, settings)
-          return {action: :skipped, reason: :empty_path} if path.empty?
+          return { :action => :skipped, :reason => :empty_path} if path.empty?
           klass = Config.log_exception { "#{path.to_s.camelize}Controller".constantize } rescue nil
-          return {action: :skipped, path: path, reason: :klass_not_present} if !klass
-          return {action: :skipped, path: path, reason: :not_swagger_resource} if !klass.methods.include?(:swagger_config) or !klass.swagger_config[:controller]
-          return {action: :skipped, path: path, reason: :not_kind_of_parent_controller} if config[:parent_controller] && !(klass < config[:parent_controller])
+          return { :action => :skipped, :path => path, :reason => :klass_not_present} if !klass
+          return { :action => :skipped, :path => path, :reason => :not_swagger_resource} if !klass.methods.include?(:swagger_config) or !klass.swagger_config[:controller]
+          return { :action => :skipped, :path => path, :reason => :not_kind_of_parent_controller} if config[:parent_controller] && !(klass < config[:parent_controller])
           apis, models, defined_nicknames = [], {}, []
           routes.select{|i| i.defaults[:controller] == path}.each do |route|
             unless nickname_defined?(defined_nicknames, path, route) # only add once for each route once e.g. PATCH, PUT 
@@ -146,7 +146,7 @@ module Swagger
               defined_nicknames << ret[:nickname] if ret[:nickname].present?
             end
           end
-          {action: :processed, path: path, apis: apis, models: models, klass: klass}
+          { :action => :processed, :path => path, :apis => apis, :models => models, :klass => klass }
         end
 
         def route_verbs(route)
@@ -168,10 +168,10 @@ module Swagger
           metadata = ApiDeclarationFileMetadata.new(
             root["apiVersion"], path, root["basePath"],
             settings[:controller_base_path],
-            camelize_model_properties: config.fetch(:camelize_model_properties, true),
-            swagger_version: root["swaggerVersion"],
-            authorizations: root[:authorizations],
-            resource_path: swagger_config[:resource_path]
+            :camelize_model_properties => config.fetch(:camelize_model_properties, true),
+            :swagger_version => root["swaggerVersion"],
+            :authorizations => root[:authorizations],
+            :resource_path => swagger_config[:resource_path]
           )
           declaration = ApiDeclarationFile.new(metadata, apis, models)
           declaration.generate_resource
@@ -185,7 +185,7 @@ module Swagger
           models, apis = {}, []
           action = route.defaults[:action]
           verbs = route_verbs(route)
-          return {apis: apis, models: models, nickname: nil} if !operation = klass.swagger_actions[action.to_sym]
+          return { :apis => apis, :models => models, :nickname => nil} if !operation = klass.swagger_actions[action.to_sym]
           operation = Hash[operation.map {|k, v| [k.to_s.gsub("@","").to_sym, v.respond_to?(:deep_dup) ? v.deep_dup : v.dup] }] # rename :@instance hash keys
           nickname = operation[:nickname] = path_route_nickname(path, route)
 
@@ -200,7 +200,7 @@ module Swagger
           apis << {:path => api_path, :operations => operations}
           models = get_klass_models(klass)
 
-          {apis: apis, models: models, nickname: nickname}
+          { :apis => apis, :models => models, :nickname => nickname }
         end
 
         def get_klass_models(klass)
@@ -208,9 +208,9 @@ module Swagger
           # Add any declared models to the root of the resource.
           klass.swagger_models.each do |model_name, model|
             formatted_model = {
-              id: model[:id],
-              required: model[:required],
-              properties: model[:properties],
+              :id => model[:id],
+              :required => model[:required],
+              :properties => model[:properties],
             }
             formatted_model[:description] = model[:description] if model[:description]
             models[model[:id]] = formatted_model
@@ -225,10 +225,10 @@ module Swagger
           api_file_path = config[:api_file_path]
           authorizations = config[:authorizations]
           settings = {
-            base_path: base_path,
-            controller_base_path: controller_base_path,
-            api_file_path: api_file_path,
-            authorizations: authorizations
+            :base_path => base_path,
+            :controller_base_path => controller_base_path,
+            :api_file_path => api_file_path,
+            :authorizations => authorizations
           }.freeze
         end
 
