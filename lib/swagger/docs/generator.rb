@@ -178,7 +178,7 @@ module Swagger
         end
 
         def routes
-          Config.base_applications.map{|app| app.routes.routes.to_a }.flatten
+          ActionController::Routing::Routes.routes
         end
 
         def get_route_path_apis(path, route, klass, settings, config)
@@ -233,7 +233,7 @@ module Swagger
         end
 
         def get_route_paths(controller_base_path)
-          paths = routes.map{|i| "#{i.defaults[:controller]}" }
+          paths = routes.map{|i| "#{i.instance_variable_get(:@defaults)[:controller]}" }
           paths.uniq.select{|i| i.start_with?(controller_base_path)}
         end
 
