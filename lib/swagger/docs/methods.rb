@@ -1,4 +1,4 @@
-require "active_support/core_ext/hash/deep_merge"
+require "lib/core_ext/hash/deep_merge"
 module Swagger
   module Docs
     module Methods
