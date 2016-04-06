@@ -134,11 +134,13 @@ module Swagger
         def process_path(path, root, config, settings)
           return { :action => :skipped, :reason => :empty_path} if path.empty?
           klass = Config.log_exception { "#{path.to_s.camelize}Controller".constantize } rescue nil
+
           return { :action => :skipped, :path => path, :reason => :klass_not_present} if !klass
-          return { :action => :skipped, :path => path, :reason => :not_swagger_resource} if !klass.methods.include?(:swagger_config) or !klass.swagger_config[:controller]
+
+          return { :action => :skipped, :path => path, :reason => :not_swagger_resource} if !klass.respond_to?(:swagger_config) 
           return { :action => :skipped, :path => path, :reason => :not_kind_of_parent_controller} if config[:parent_controller] && !(klass < config[:parent_controller])
           apis, models, defined_nicknames = [], {}, []
-          routes.select{|i| i.defaults[:controller] == path}.each do |route|
+          routes.select{|i| i.instance_variable_get(:@defaults)[:controller] == path}.each do |route|
             unless nickname_defined?(defined_nicknames, path, route) # only add once for each route once e.g. PATCH, PUT 
               ret = get_route_path_apis(path, route, klass, settings, config)
               apis = apis + ret[:apis]
@@ -150,7 +152,7 @@ module Swagger
         end
 
         def route_verbs(route)
-          if defined?(route.verb.source) then route.verb.source.to_s.delete('$'+'^').split('|') else [route.verb] end.collect{|verb| verb.downcase.to_sym}
+          if defined?(route.verb.source) then route.verb.source.to_s.delete('$'+'^').split('|') else [route.instance_variable_get(:@conditions)[:method]] end
         end
 
         def path_route_nickname(path, route)
@@ -189,7 +191,7 @@ module Swagger
           operation = Hash[operation.map {|k, v| [k.to_s.gsub("@","").to_sym, v.respond_to?(:deep_dup) ? v.deep_dup : v.dup] }] # rename :@instance hash keys
           nickname = operation[:nickname] = path_route_nickname(path, route)
 
-          route_path = if defined?(route.path.spec) then route.path.spec else route.path end
+          route_path = if defined?(route.path.spec) then route.path.spec else route.to_s.split(" ")[1].gsub!("?","") end
           api_path = transform_spec_to_api_path(route_path, settings[:controller_base_path], config[:api_extension_type])
           operation[:parameters] = filter_path_params(api_path, operation[:parameters]) if operation[:parameters]
           operations = verbs.collect{|verb|
